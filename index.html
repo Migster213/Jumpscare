@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
+
+<title>DON'T TOUCH THE EDGE</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+
+    background: #030303;
+
+    color: white;
+
+    font-family: "Courier New", monospace;
+
+    text-align: center;
+
+    overflow: hidden;
+
+    touch-action: none;
+
+    user-select: none;
+
+    -webkit-user-select: none;
+
+}
+
+h1 {
+
+    margin: 18px 0 4px;
+
+    font-size: clamp(22px, 4vw, 34px);
+
+    letter-spacing: 5px;
+
+}
+
+#subtitle {
+
+    color: #888;
+
+    margin-bottom: 6px;
+
+    font-size: clamp(12px, 2vw, 16px);
+
+}
+
+#timer {
+
+    color: red;
+
+    font-size: 24px;
+
+    font-weight: bold;
+
+    margin-bottom: 10px;
+
+}
+
+#gameContainer {
+
+    position: relative;
+
+    width: 1100px;
+
+    max-width: 96vw;
+
+    margin: auto;
+
+}
+
+canvas {
+
+    display: block;
+
+    width: 100%;
+
+    height: auto;
+
+    background: #090909;
+
+    border: 3px solid #222;
+
+    box-shadow:
+        0 0 25px black,
+        inset 0 0 40px black;
+
+    cursor: none;
+
+    touch-action: none;
+
+}
+
+#redDot {
+
+    position: fixed;
+
+    width: 10px;
+
+    height: 10px;
+
+    background: red;
+
+    border-radius: 50%;
+
+    pointer-events: none;
+
+    z-index: 5000;
+
+    display: none;
+
+    transform: translate(-50%, -50%);
+
+    box-shadow:
+        0 0 5px red,
+        0 0 10px red;
+
+}
+
+#message {
+
+    margin-top: 10px;
+
+    color: #aaa;
+
+    font-size: 17px;
+
+}
+
+/* =================================
+   JUMPSCARE
+   ================================= */
+
+#jumpscare {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    background: black;
+
+    z-index: 99999;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+#jumpscare img {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+    animation: shake 0.075s infinite;
+
+}
+
+/* REDUCED SHAKE */
+
+@keyframes shake {
+
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    20% {
+        transform: translate(-8px, 4px) scale(1.025);
+    }
+
+    40% {
+        transform: translate(7px, -6px) scale(1.04);
+    }
+
+    60% {
+        transform: translate(-6px, -5px) scale(1.03);
+    }
+
+    80% {
+        transform: translate(8px, 6px) scale(1.04);
+    }
+
+    100% {
+        transform: translate(-4px, 2px) scale(1.025);
+    }
+
+}
+
+/* =================================
+   TRY AGAIN
+   ================================= */
+
+#tryAgain {
+
+    position: absolute;
+
+    bottom: 30px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 100000;
+
+    padding: 14px 42px;
+
+    background: rgba(0,0,0,0.9);
+
+    color: white;
+
+    border: 2px solid white;
+
+    font-family: "Courier New", monospace;
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+
+}
+
+#tryAgain:hover {
+
+    background: white;
+
+    color: black;
+
+}
+
+/* =================================
+   WIN
+   ================================= */
+
+#winScreen {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    background: #020202;
+
+    z-index: 90000;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-direction: column;
+
+}
+
+#winScreen h2 {
+
+    color: #55ff55;
+
+    font-size: clamp(32px, 7vw, 52px);
+
+    letter-spacing: 6px;
+
+}
+
+#winScreen p {
+
+    color: #888;
+
+    font-size: 18px;
+
+}
+
+#restart {
+
+    padding: 14px 42px;
+
+    background: black;
+
+    color: white;
+
+    border: 2px solid white;
+
+    font-family: inherit;
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+
+}
+
+#restart:hover {
+
+    background: white;
+
+    color: black;
+
+}
+
+/* =================================
+   MOBILE
+   ================================= */
+
+@media (max-width: 600px) {
+
+    h1 {
+
+        margin-top: 10px;
+
+        letter-spacing: 3px;
+
+    }
+
+    #timer {
+
+        font-size: 20px;
+
+    }
+
+    #message {
+
+        font-size: 14px;
+
+    }
+
+    #gameContainer {
+
+        max-width: 98vw;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h1>DON'T TOUCH THE EDGE</h1>
+
+
+<div id="subtitle">
+
+    Click START, then follow the line carefully.
+
+</div>
+
+
+<div id="timer">
+
+    TIME: <span id="time">45</span>
+
+</div>
+
+
+<div id="gameContainer">
+
+    <canvas
+        id="game"
+        width="1100"
+        height="600">
+    </canvas>
+
+</div>
+
+
+<div id="message">
+
+    Click the GREEN circle to begin.
+
+</div>
+
+
+<div id="redDot"></div>
+
+
+<!-- =================================
+     JUMPSCARE
+     ================================= -->
+
+<div id="jumpscare">
+
+    <img
+        src="jumpscare.png"
+        alt="Jumpscare"
+    >
+
+    <button
+        id="tryAgain"
+        onclick="restartGame()"
+    >
+
+        TRY AGAIN
+
+    </button>
+
+</div>
+
+
+<!-- =================================
+     WIN SCREEN
+     ================================= -->
+
+<div id="winScreen">
+
+    <h2>YOU MADE IT.</h2>
+
+    <p>
+        You actually survived.
+    </p>
+
+    <button
+        id="restart"
+        onclick="restartGame()"
+    >
+
+        PLAY AGAIN
+
+    </button>
+
+</div>
+
+
+<!-- =================================
+     JUMPSCARE SOUND
+     ================================= -->
+
+<audio
+    id="jumpscareSound"
+    preload="auto"
+>
+
+    <source
+        src="sound.wav"
+        type="audio/wav"
+    >
+
+</audio>
+
+
+<script>
+
+/* =========================================
+   CANVAS
+   ========================================= */
+
+const canvas =
+    document.getElementById("game");
+
+const ctx =
+    canvas.getContext("2d");
+
+const redDot =
+    document.getElementById("redDot");
+
+
+/* =========================================
+   GAME VARIABLES
+   ========================================= */
+
+let gameStarted = false;
+
+let gameOver = false;
+
+let time = 45;
+
+let timer = null;
+
+
+/* =========================================
+   3 SECOND START IMMUNITY
+   ========================================= */
+
+/*
+    Immunity begins when START is clicked.
+
+    It ends when:
+
+    1. Three seconds pass
+       OR
+
+    2. The red dot reaches the safe line.
+
+    Whichever happens first.
+*/
+
+let startImmunity = false;
+
+let immunityTimer = null;
+
+
+/* =========================================
+   NERVOUS BACKGROUND AUDIO
+   ========================================= */
+
+let tensionAudio = null;
+
+let tensionMaster = null;
+
+let heartbeatTimer = null;
+
+
+function startTensionSound() {
+
+    const AudioContext =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+    if (!AudioContext) {
+        return;
+    }
+
+    tensionAudio =
+        new AudioContext();
+
+    tensionMaster =
+        tensionAudio.createGain();
+
+    tensionMaster.gain.value = 0.12;
+
+    tensionMaster.connect(
+        tensionAudio.destination
+    );
+
+
+    /* LOW DARK DRONE */
+
+    const drone =
+        tensionAudio.createOscillator();
+
+    const droneGain =
+        tensionAudio.createGain();
+
+    drone.type = "sine";
+
+    drone.frequency.value = 48;
+
+    droneGain.gain.value = 0.18;
+
+    drone.connect(droneGain);
+
+    droneGain.connect(
+        tensionMaster
+    );
+
+    drone.start();
+
+
+    /* SECOND DRONE */
+
+    const drone2 =
+        tensionAudio.createOscillator();
+
+    const droneGain2 =
+        tensionAudio.createGain();
+
+    drone2.type = "triangle";
+
+    drone2.frequency.value = 72;
+
+    droneGain2.gain.value = 0.04;
+
+    drone2.connect(droneGain2);
+
+    droneGain2.connect(
+        tensionMaster
+    );
+
+    drone2.start();
+
+
+    /* HEARTBEAT */
+
+    heartbeatTimer =
+        setInterval(
+            heartbeat,
+            1050
+        );
+
+}
+
+
+function heartbeat() {
+
+    if (
+        !tensionAudio ||
+        gameOver
+    ) {
+        return;
+    }
+
+
+    const osc =
+        tensionAudio.createOscillator();
+
+    const gain =
+        tensionAudio.createGain();
+
+
+    osc.type = "sine";
+
+    osc.frequency.value = 55;
+
+
+    gain.gain.setValueAtTime(
+        0.001,
+        tensionAudio.currentTime
+    );
+
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.35,
+        tensionAudio.currentTime + 0.04
+    );
+
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        tensionAudio.currentTime + 0.16
+    );
+
+
+    osc.connect(gain);
+
+    gain.connect(
+        tensionMaster
+    );
+
+
+    osc.start();
+
+    osc.stop(
+        tensionAudio.currentTime + 0.18
+    );
+
+
+    /* SECOND BEAT */
+
+    setTimeout(
+        function() {
+
+            if (
+                !tensionAudio ||
+                gameOver
+            ) {
+                return;
+            }
+
+
+            const osc2 =
+                tensionAudio.createOscillator();
+
+            const gain2 =
+                tensionAudio.createGain();
+
+
+            osc2.type = "sine";
+
+            osc2.frequency.value = 48;
+
+
+            gain2.gain.setValueAtTime(
+                0.001,
+                tensionAudio.currentTime
+            );
+
+
+            gain2.gain.exponentialRampToValueAtTime(
+                0.20,
+                tensionAudio.currentTime + 0.03
+            );
+
+
+            gain2.gain.exponentialRampToValueAtTime(
+                0.001,
+                tensionAudio.currentTime + 0.12
+            );
+
+
+            osc2.connect(gain2);
+
+            gain2.connect(
+                tensionMaster
+            );
+
+
+            osc2.start();
+
+            osc2.stop(
+                tensionAudio.currentTime + 0.14
+            );
+
+        },
+
+        130
+    );
+
+}
+
+
+function stopTensionSound() {
+
+    if (heartbeatTimer) {
+
+        clearInterval(
+            heartbeatTimer
+        );
+
+        heartbeatTimer = null;
+
+    }
+
+
+    if (tensionAudio) {
+
+        tensionAudio.close();
+
+        tensionAudio = null;
+
+    }
+
+}
+
+
+/* =========================================
+   PATH SETTINGS
+   ========================================= */
+
+const SAFE_PATH_WIDTH = 20;
+
+const SAFE_DISTANCE = 9;
+
+
+/* =========================================
+   LONG PATH
+   ========================================= */
+
+const path = [
+
+    { x: 45,   y: 530 },
+    { x: 100,  y: 500 },
+    { x: 150,  y: 450 },
+    { x: 125,  y: 390 },
+    { x: 80,   y: 335 },
+    { x: 120,  y: 280 },
+    { x: 200,  y: 260 },
+    { x: 260,  y: 300 },
+    { x: 310,  y: 355 },
+    { x: 365,  y: 390 },
+    { x: 425,  y: 370 },
+    { x: 455,  y: 315 },
+    { x: 430,  y: 260 },
+    { x: 390,  y: 205 },
+    { x: 420,  y: 150 },
+    { x: 485,  y: 120 },
+    { x: 550,  y: 145 },
+    { x: 590,  y: 200 },
+    { x: 565,  y: 255 },
+    { x: 520,  y: 300 },
+    { x: 545,  y: 350 },
+    { x: 610,  y: 370 },
+    { x: 670,  y: 340 },
+    { x: 700,  y: 285 },
+    { x: 675,  y: 235 },
+    { x: 700,  y: 180 },
+    { x: 760,  y: 150 },
+    { x: 820,  y: 180 },
+    { x: 850,  y: 230 },
+    { x: 825,  y: 285 },
+    { x: 780,  y: 320 },
+    { x: 805,  y: 370 },
+    { x: 870,  y: 400 },
+    { x: 930,  y: 380 },
+    { x: 965,  y: 330 },
+    { x: 945,  y: 275 },
+    { x: 970,  y: 220 },
+    { x: 1020, y: 190 },
+    { x: 1060, y: 225 },
+    { x: 1040, y: 285 },
+    { x: 1000, y: 330 },
+    { x: 1030, y: 390 },
+    { x: 1070, y: 440 },
+    { x: 1040, y: 500 },
+    { x: 980,  y: 530 }
+
+];
+
+
+/* =========================================
+   DRAW GAME
+   ========================================= */
+
+function drawGame() {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    ctx.fillStyle = "#070707";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* GRID */
+
+    ctx.strokeStyle = "#111";
+
+    ctx.lineWidth = 1;
+
+
+    for (
+        let x = 0;
+        x <= canvas.width;
+        x += 35
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(x, 0);
+
+        ctx.lineTo(
+            x,
+            canvas.height
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for (
+        let y = 0;
+        y <= canvas.height;
+        y += 35
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(0, y);
+
+        ctx.lineTo(
+            canvas.width,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /* DANGEROUS EDGE */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        path[0].x,
+        path[0].y
+    );
+
+
+    for (
+        let i = 1;
+        i < path.length;
+        i++
+    ) {
+
+        ctx.lineTo(
+            path[i].x,
+            path[i].y
+        );
+
+    }
+
+
+    ctx.strokeStyle = "#010101";
+
+    ctx.lineWidth = 46;
+
+    ctx.lineCap = "round";
+
+    ctx.lineJoin = "round";
+
+    ctx.stroke();
+
+
+    /* SAFE LINE */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        path[0].x,
+        path[0].y
+    );
+
+
+    for (
+        let i = 1;
+        i < path.length;
+        i++
+    ) {
+
+        ctx.lineTo(
+            path[i].x,
+            path[i].y
+        );
+
+    }
+
+
+    ctx.strokeStyle = "#777";
+
+    ctx.lineWidth = SAFE_PATH_WIDTH;
+
+    ctx.lineCap = "round";
+
+    ctx.lineJoin = "round";
+
+    ctx.stroke();
+
+
+    /* CENTER */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        path[0].x,
+        path[0].y
+    );
+
+
+    for (
+        let i = 1;
+        i < path.length;
+        i++
+    ) {
+
+        ctx.lineTo(
+            path[i].x,
+            path[i].y
+        );
+
+    }
+
+
+    ctx.strokeStyle = "#aaa";
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+
+    /* START */
+
+    const start = path[0];
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        start.x,
+        start.y,
+        32,
+        0,
+        Math.PI * 2
+    );
+
+
+    if (!gameStarted) {
+
+        ctx.fillStyle = "#159615";
+
+        ctx.strokeStyle = "#55ff55";
+
+    } else {
+
+        ctx.fillStyle = "#333";
+
+        ctx.strokeStyle = "#555";
+
+    }
+
+
+    ctx.fill();
+
+    ctx.lineWidth = 4;
+
+    ctx.stroke();
+
+
+    ctx.fillStyle = "white";
+
+    ctx.font =
+        "bold 13px Courier New";
+
+    ctx.textAlign = "center";
+
+    ctx.textBaseline = "middle";
+
+
+    ctx.fillText(
+        gameStarted ? "GO" : "START",
+        start.x,
+        start.y
+    );
+
+
+    /* END */
+
+    const end =
+        path[path.length - 1];
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        end.x,
+        end.y,
+        28,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle = "#641414";
+
+    ctx.fill();
+
+
+    ctx.strokeStyle = "#ff3333";
+
+    ctx.lineWidth = 3;
+
+    ctx.stroke();
+
+
+    ctx.fillStyle = "white";
+
+    ctx.fillText(
+        "END",
+        end.x,
+        end.y
+    );
+
+
+    ctx.textAlign = "left";
+
+    ctx.textBaseline = "alphabetic";
+
+}
+
+
+/* =========================================
+   MOUSE DOT
+   ========================================= */
+
+document.addEventListener(
+    "mousemove",
+    function(event) {
+
+        redDot.style.left =
+            event.clientX + "px";
+
+        redDot.style.top =
+            event.clientY + "px";
+
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+
+        if (
+            event.clientX >= rect.left &&
+            event.clientX <= rect.right &&
+            event.clientY >= rect.top &&
+            event.clientY <= rect.bottom
+        ) {
+
+            redDot.style.display =
+                "block";
+
+        } else {
+
+            redDot.style.display =
+                "none";
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   GET POSITION
+   ========================================= */
+
+function getPosition(event) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    const scaleX =
+        canvas.width / rect.width;
+
+
+    const scaleY =
+        canvas.height / rect.height;
+
+
+    return {
+
+        x:
+            (event.clientX - rect.left)
+            * scaleX,
+
+        y:
+            (event.clientY - rect.top)
+            * scaleY
+
+    };
+
+}
+
+
+/* =========================================
+   START
+   ========================================= */
+
+function checkStart(x, y) {
+
+    if (
+        gameStarted ||
+        gameOver
+    ) {
+        return;
+    }
+
+
+    const start = path[0];
+
+
+    const distance =
+        Math.hypot(
+            x - start.x,
+            y - start.y
+        );
+
+
+    if (distance <= 32) {
+
+        startGame();
+
+    }
+
+}
+
+
+/* =========================================
+   START GAME
+   ========================================= */
+
+function startGame() {
+
+    if (
+        gameStarted ||
+        gameOver
+    ) {
+        return;
+    }
+
+
+    gameStarted = true;
+
+
+    /* =====================================
+       START 3 SECOND IMMUNITY
+       ===================================== */
+
+    startImmunity = true;
+
+
+    if (immunityTimer) {
+
+        clearTimeout(
+            immunityTimer
+        );
+
+    }
+
+
+    immunityTimer =
+        setTimeout(
+            function() {
+
+                startImmunity = false;
+
+                immunityTimer = null;
+
+            },
+
+            3000
+        );
+
+
+    document.getElementById(
+        "message"
+    ).textContent =
+        "GO! DON'T TOUCH THE EDGE!";
+
+
+    drawGame();
+
+
+    /* START NERVOUS SOUND */
+
+    startTensionSound();
+
+
+    /* START TIMER */
+
+    timer = setInterval(
+        updateTimer,
+        1000
+    );
+
+}
+
+
+/* =========================================
+   TIMER
+   ========================================= */
+
+function updateTimer() {
+
+    if (
+        !gameStarted ||
+        gameOver
+    ) {
+        return;
+    }
+
+
+    time--;
+
+
+    document.getElementById(
+        "time"
+    ).textContent =
+        time;
+
+
+    if (time <= 0) {
+
+        loseGame();
+
+    }
+
+}
+
+
+/* =========================================
+   DISTANCE
+   ========================================= */
+
+function distanceToSegment(
+    px,
+    py,
+    x1,
+    y1,
+    x2,
+    y2
+) {
+
+    const dx =
+        x2 - x1;
+
+    const dy =
+        y2 - y1;
+
+
+    if (
+        dx === 0 &&
+        dy === 0
+    ) {
+
+        return Math.hypot(
+            px - x1,
+            py - y1
+        );
+
+    }
+
+
+    let t =
+        (
+            (px - x1) * dx +
+            (py - y1) * dy
+        )
+        /
+        (
+            dx * dx +
+            dy * dy
+        );
+
+
+    t = Math.max(
+        0,
+        Math.min(1, t)
+    );
+
+
+    const closestX =
+        x1 + t * dx;
+
+
+    const closestY =
+        y1 + t * dy;
+
+
+    return Math.hypot(
+        px - closestX,
+        py - closestY
+    );
+
+}
+
+
+/* =========================================
+   CHECK POSITION
+   ========================================= */
+
+function checkPosition(x, y) {
+
+    if (
+        !gameStarted ||
+        gameOver
+    ) {
+        return;
+    }
+
+
+    let closest = Infinity;
+
+
+    for (
+        let i = 0;
+        i < path.length - 1;
+        i++
+    ) {
+
+        const distance =
+            distanceToSegment(
+                x,
+                y,
+                path[i].x,
+                path[i].y,
+                path[i + 1].x,
+                path[i + 1].y
+            );
+
+
+        if (
+            distance < closest
+        ) {
+
+            closest = distance;
+
+        }
+
+    }
+
+
+    /* =====================================
+       3 SECOND START IMMUNITY
+
+       The player is temporarily safe.
+
+       The immunity ends immediately when
+       the red dot reaches the actual path.
+       ===================================== */
+
+    if (startImmunity) {
+
+        if (
+            closest <= SAFE_DISTANCE
+        ) {
+
+            /*
+
+                The red dot has reached
+                the safe line.
+
+                Immunity ends NOW.
+
+            */
+
+            startImmunity = false;
+
+
+            if (immunityTimer) {
+
+                clearTimeout(
+                    immunityTimer
+                );
+
+                immunityTimer = null;
+
+            }
+
+        } else {
+
+            /*
+
+                Still inside the 3-second
+                grace period.
+
+                Do NOT kill the player.
+
+            */
+
+            return;
+
+        }
+
+    }
+
+
+    /* =====================================
+       NORMAL EDGE DETECTION
+       ===================================== */
+
+    if (
+        closest > SAFE_DISTANCE
+    ) {
+
+        loseGame();
+
+        return;
+
+    }
+
+
+    /* =====================================
+       END
+       ===================================== */
+
+    const end =
+        path[path.length - 1];
+
+
+    const distanceToEnd =
+        Math.hypot(
+            x - end.x,
+            y - end.y
+        );
+
+
+    if (
+        distanceToEnd <= 28
+    ) {
+
+        winGame();
+
+    }
+
+}
+
+
+/* =========================================
+   MOUSE CLICK
+   ========================================= */
+
+canvas.addEventListener(
+    "click",
+    function(event) {
+
+        if (gameOver) {
+            return;
+        }
+
+
+        const position =
+            getPosition(event);
+
+
+        if (!gameStarted) {
+
+            checkStart(
+                position.x,
+                position.y
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   MOUSE MOVE
+   ========================================= */
+
+canvas.addEventListener(
+    "mousemove",
+    function(event) {
+
+        if (
+            !gameStarted ||
+            gameOver
+        ) {
+            return;
+        }
+
+
+        const position =
+            getPosition(event);
+
+
+        checkPosition(
+            position.x,
+            position.y
+        );
+
+    }
+);
+
+
+/* =========================================
+   TOUCH START
+   ========================================= */
+
+canvas.addEventListener(
+    "touchstart",
+    function(event) {
+
+        event.preventDefault();
+
+
+        if (gameOver) {
+            return;
+        }
+
+
+        const touch =
+            event.touches[0];
+
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+
+        const x =
+            (touch.clientX - rect.left)
+            *
+            (canvas.width / rect.width);
+
+
+        const y =
+            (touch.clientY - rect.top)
+            *
+            (canvas.height / rect.height);
+
+
+        if (!gameStarted) {
+
+            checkStart(x, y);
+
+        } else {
+
+            checkPosition(x, y);
+
+        }
+
+    },
+
+    {
+        passive: false
+    }
+
+);
+
+
+/* =========================================
+   TOUCH MOVE
+   ========================================= */
+
+canvas.addEventListener(
+    "touchmove",
+    function(event) {
+
+        event.preventDefault();
+
+
+        if (
+            !gameStarted ||
+            gameOver
+        ) {
+            return;
+        }
+
+
+        const touch =
+            event.touches[0];
+
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+
+        const x =
+            (touch.clientX - rect.left)
+            *
+            (canvas.width / rect.width);
+
+
+        const y =
+            (touch.clientY - rect.top)
+            *
+            (canvas.height / rect.height);
+
+
+        checkPosition(
+            x,
+            y
+        );
+
+    },
+
+    {
+        passive: false
+    }
+
+);
+
+
+/* =========================================
+   TOUCH END
+   ========================================= */
+
+canvas.addEventListener(
+    "touchend",
+    function(event) {
+
+        event.preventDefault();
+
+    },
+
+    {
+        passive: false
+    }
+
+);
+
+
+/* =========================================
+   LOSE
+   ========================================= */
+
+function loseGame() {
+
+    if (gameOver) {
+        return;
+    }
+
+
+    gameOver = true;
+
+
+    clearInterval(timer);
+
+
+    if (immunityTimer) {
+
+        clearTimeout(
+            immunityTimer
+        );
+
+        immunityTimer = null;
+
+    }
+
+
+    startImmunity = false;
+
+
+    /* STOP NERVOUS BACKGROUND */
+
+    stopTensionSound();
+
+
+    /* PLAY JUMPSCARE SOUND */
+
+    const sound =
+        document.getElementById(
+            "jumpscareSound"
+        );
+
+
+    sound.currentTime = 0;
+
+
+    sound.play().catch(
+        function(error) {
+
+            console.log(
+                "Could not play jumpscare sound:",
+                error
+            );
+
+        }
+    );
+
+
+    /* SHOW JUMPSCARE */
+
+    document.getElementById(
+        "jumpscare"
+    ).style.display = "flex";
+
+}
+
+
+/* =========================================
+   WIN
+   ========================================= */
+
+function winGame() {
+
+    if (gameOver) {
+        return;
+    }
+
+
+    gameOver = true;
+
+
+    clearInterval(timer);
+
+
+    if (immunityTimer) {
+
+        clearTimeout(
+            immunityTimer
+        );
+
+        immunityTimer = null;
+
+    }
+
+
+    startImmunity = false;
+
+
+    /* STOP NERVOUS SOUND */
+
+    stopTensionSound();
+
+
+    document.getElementById(
+        "winScreen"
+    ).style.display = "flex";
+
+}
+
+
+/* =========================================
+   RESTART
+   ========================================= */
+
+function restartGame() {
+
+    location.reload();
+
+}
+
+
+/* =========================================
+   INITIAL DRAW
+   ========================================= */
+
+drawGame();
+
+</script>
+
+</body>
+
+</html>
